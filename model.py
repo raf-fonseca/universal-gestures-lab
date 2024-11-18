@@ -1,3 +1,5 @@
+
+model.py:
 import torch
 import torch.nn as nn
 import torchvision
@@ -10,6 +12,7 @@ import matplotlib.pyplot as plt
 import json
 from pprint import pprint
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
+from metrics import compute_confusion_matrix
 
 output_dim = 1  # binary classification for thumbs up or down
 input_dim = 17  # 17 features
@@ -119,11 +122,15 @@ def main():
                 auc_roc = roc_auc_score(all_labels, all_probs)
                 precision, recall, _ = precision_recall_curve(all_labels, all_probs)
                 auc_pr = auc(recall, precision)
+                binary_preds = [1 if prob > detect_threshold else 0 for prob in all_probs] 
+                cm = compute_confusion_matrix(all_labels, binary_preds)
+
                 print(
-                    "Iteration: {}. Loss: {}. Accuracy: {}. AUC-ROC: {:.4f}. AUC-PR: {:.4f}".format(
-                        iter, loss.item(), accuracy, auc_roc, auc_pr
-                    )
+                    "Iteration: {}. Loss: {}. Accuracy: {}. AUC-ROC: {:.4f}. AUC-PR: {:.4f}. Confusion_Matrix: {}".format(
+                    iter, loss.item(), accuracy, auc_roc, auc_pr, 
+                    ", ".join(f"{key}: {value}" for key, value in cm.items())
                 )
+)
 
     # Extract the model's state dictionary, convert to JSON serializable format
     state_dict = model.state_dict()
@@ -145,3 +152,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
